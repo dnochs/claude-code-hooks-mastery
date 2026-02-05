@@ -16,6 +16,9 @@ import time
 from pathlib import Path
 
 import requests
+import cloudscraper
+from playwright.sync_api import sync_playwright
+from playwright_stealth import Stealth
 
 # Import our configuration settings
 from . import config
@@ -145,6 +148,141 @@ def fetch_page(url):
     except requests.exceptions.RequestException as e:
         # Catch-all for any other request-related errors
         print(f"  ERROR: Request failed for {url}: {e}")
+        return None
+
+
+def fetch_page_playwright(url, wait_for_selector=None):
+    """
+    Fetch a web page using Playwright (real browser automation).
+
+    This function uses a real Chromium browser to fetch pages, which can bypass
+    simple bot detection that blocks regular HTTP requests.
+
+    Why use Playwright instead of requests?
+    - Some websites block requests that don't come from real browsers
+    - Playwright runs an actual browser, so the website sees a real visitor
+    - It can handle JavaScript-rendered content
+    - It can wait for dynamic content to load
+
+    Args:
+        url (str): The full URL of the page to fetch
+        wait_for_selector (str, optional): CSS selector to wait for before returning.
+                                           Useful for pages that load content dynamically.
+
+    Returns:
+        str or None: The HTML content of the page if successful, None if an error occurred
+
+    Example:
+        html = fetch_page_playwright("https://www.example.com")
+        if html:
+            print(f"Got {len(html)} characters of HTML")
+        else:
+            print("Failed to fetch page")
+    """
+    # First, wait the polite delay
+    delay_between_requests()
+
+    print(f"  Fetching with Playwright: {url}")
+
+    try:
+        with sync_playwright() as p:
+            # Launch Chromium with stealth mode
+            # Using headless=False can help bypass some detection
+            browser = p.chromium.launch(
+                headless=False,
+                args=[
+                    "--disable-blink-features=AutomationControlled",
+                    "--no-sandbox",
+                ]
+            )
+
+            # Create a new browser context with realistic settings
+            context = browser.new_context(
+                viewport={"width": 1920, "height": 1080},
+                user_agent=(
+                    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                    "AppleWebKit/537.36 (KHTML, like Gecko) "
+                    "Chrome/120.0.0.0 Safari/537.36"
+                ),
+                ignore_https_errors=True,
+            )
+
+            # Create a new page
+            page = context.new_page()
+
+            # Apply stealth patches to avoid bot detection
+            # This modifies browser fingerprints to look more human
+            stealth = Stealth()
+            stealth.apply_stealth_sync(page)
+
+            # Navigate to the URL with a timeout
+            page.goto(url, timeout=60000, wait_until="networkidle")
+
+            # Wait for Cloudflare challenge to complete (if present)
+            # Cloudflare pages typically redirect after solving the challenge
+            # We wait for the page to stabilize
+            page.wait_for_load_state("networkidle")
+
+            # Additional wait to let any JavaScript finish executing
+            page.wait_for_timeout(3000)
+
+            # If a selector was provided, wait for it to appear
+            if wait_for_selector:
+                page.wait_for_selector(wait_for_selector, timeout=10000)
+
+            # Get the full HTML content
+            html = page.content()
+
+            # Clean up
+            browser.close()
+
+            print(f"  Success! Got {len(html)} characters of HTML")
+            return html
+
+    except Exception as e:
+        print(f"  ERROR: Playwright failed for {url}: {e}")
+        return None
+
+
+def fetch_page_cloudscraper(url):
+    """
+    Fetch a web page using cloudscraper (designed to bypass Cloudflare).
+
+    Cloudscraper is specifically built to handle Cloudflare's anti-bot protection.
+    It solves JavaScript challenges automatically.
+
+    Args:
+        url (str): The full URL of the page to fetch
+
+    Returns:
+        str or None: The HTML content of the page if successful, None if an error occurred
+    """
+    # First, wait the polite delay
+    delay_between_requests()
+
+    print(f"  Fetching with cloudscraper: {url}")
+
+    try:
+        # Create a cloudscraper session
+        scraper = cloudscraper.create_scraper(
+            browser={
+                'browser': 'chrome',
+                'platform': 'windows',
+                'desktop': True
+            }
+        )
+
+        # Make the request
+        response = scraper.get(url, timeout=30)
+
+        # Check if successful
+        response.raise_for_status()
+
+        print(f"  Success! Got {len(response.text)} characters of HTML")
+        return response.text
+
+    except Exception as e:
+        print(f"  ERROR: cloudscraper failed for {url}: {e}")
         return None
 
 

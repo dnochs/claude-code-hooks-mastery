@@ -11,10 +11,11 @@ without changing the main logic.
 # =============================================================================
 
 # The base URL for NEFCO's website (no trailing slash)
-BASE_URL = "https://www.nefco.com"
+# The correct website is gonefco.com (not nefco.com which is a different company)
+BASE_URL = "https://www.gonefco.com"
 
 # The specific page we want to scrape - the "Specialty by Trade" category page
-TARGET_CATEGORY_URL = "https://www.nefco.com/catalog/specialty-by-trade"
+TARGET_CATEGORY_URL = "https://www.gonefco.com/catalog/specialty-by-trade"
 
 
 # =============================================================================

@@ -165,19 +165,19 @@ def scrape_category(category_name, category_url):
     # -------------------------------------------------------------------------
     # LIVE MODE: Actually scrape the website
     # -------------------------------------------------------------------------
-    print("  [LIVE MODE] Fetching real page...")
+    print("  [LIVE MODE] Fetching real page with cloudscraper...")
 
-    # fetch_page() already includes the polite delay
-    response = base.fetch_page(category_url)
+    # Use cloudscraper to fetch the page (designed for Cloudflare bypass)
+    html_content = base.fetch_page_cloudscraper(category_url)
 
     # Check if we got a valid response
-    if response is None:
+    if html_content is None:
         print(f"  ERROR: Failed to fetch category page: {category_url}")
         return products  # Return empty list
 
     # Parse the HTML with BeautifulSoup
     # 'html.parser' is Python's built-in HTML parser (no extra install needed)
-    soup = BeautifulSoup(response.text, 'html.parser')
+    soup = BeautifulSoup(html_content, 'html.parser')
 
     # -------------------------------------------------------------------------
     # NOTE: The selectors below are placeholders!

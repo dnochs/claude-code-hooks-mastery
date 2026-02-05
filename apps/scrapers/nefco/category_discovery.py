@@ -76,11 +76,11 @@ def discover_categories():
     # --- LIVE MODE: Actually scrape the website ---
     print(f"\n[LIVE MODE] Fetching categories from: {config.TARGET_CATEGORY_URL}")
 
-    # Use our base module's fetch_page function to get the HTML
-    response = base.fetch_page(config.TARGET_CATEGORY_URL)
+    # Use cloudscraper to fetch the HTML (designed for Cloudflare bypass)
+    html_content = base.fetch_page_cloudscraper(config.TARGET_CATEGORY_URL)
 
     # Check if the fetch was successful
-    if response is None:
+    if html_content is None:
         print("ERROR: Could not fetch the category page.")
         print("Falling back to demo categories...")
         return config.DEMO_CATEGORIES
@@ -89,7 +89,6 @@ def discover_categories():
     # BeautifulSoup takes two arguments:
     #   1. The HTML content (as a string)
     #   2. The parser to use ('html.parser' is Python's built-in HTML parser)
-    html_content = response.text
     soup = BeautifulSoup(html_content, 'html.parser')
 
     # Now we need to find the category links in the HTML.
