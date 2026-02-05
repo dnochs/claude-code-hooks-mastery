@@ -32,7 +32,7 @@ export const builder = {
     describe: 'Due date (YYYY-MM-DD format)',
     type: 'string',
   },
-};
+} as const;
 
 export async function handler(argv: ArgumentsCamelCase<AddCommandArgs>): Promise<void> {
   // 1. Validate all inputs using validateAddInput

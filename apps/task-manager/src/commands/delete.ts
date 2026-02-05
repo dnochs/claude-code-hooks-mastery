@@ -22,7 +22,7 @@ export const builder = {
     type: 'boolean',
     default: false,
   },
-};
+} as const;
 
 export async function handler(argv: ArgumentsCamelCase<DeleteCommandArgs>): Promise<void> {
   // 1. Validate ID using validateId

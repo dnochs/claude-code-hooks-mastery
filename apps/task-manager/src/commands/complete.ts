@@ -16,7 +16,7 @@ export const builder = {
     type: 'number',
     demandOption: true,
   },
-};
+} as const;
 
 export async function handler(argv: ArgumentsCamelCase<CompleteCommandArgs>): Promise<void> {
   // 1. Validate ID using validateId

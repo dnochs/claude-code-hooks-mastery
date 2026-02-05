@@ -28,7 +28,7 @@ export const builder = {
     describe: 'Show only overdue tasks',
     type: 'boolean',
   },
-};
+} as const;
 
 /**
  * Validate and convert priority string to Priority enum (case-insensitive)
